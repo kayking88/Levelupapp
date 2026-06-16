@@ -1,1 +1,1646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#111114" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MY Elevation" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="MY Elevation" />
+  <meta name="description" content="No Validation for MY Elevation — your 30-day companion app by Evolving Women Co." />
+  <!-- Apple touch icons (Safari Add to Home Screen) -->
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <title>MY Elevation — Evolving Women Co.</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #111114; }
+    #root { min-height: 100vh; }
+    /* Install banner */
+    #install-banner {
+      display: none;
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 32px); max-width: 440px;
+      background: linear-gradient(135deg, #1e1e24, #23232a);
+      border: 1px solid #F5C51866; border-radius: 18px;
+      padding: 16px 18px; z-index: 999;
+      box-shadow: 0 8px 32px #000000aa;
+      align-items: center; gap: 14px;
+    }
+    #install-banner.show { display: flex; }
+    #install-banner .ib-icon { font-size: 36px; flex-shrink: 0; }
+    #install-banner .ib-text { flex: 1; }
+    #install-banner .ib-title { font-size: 14px; font-weight: 800; color: #FFFFFF; margin-bottom: 3px; font-family: system-ui, sans-serif; }
+    #install-banner .ib-sub { font-size: 12px; color: #888899; font-family: system-ui, sans-serif; line-height: 1.4; }
+    #install-banner .ib-btn {
+      background: linear-gradient(135deg, #F5C518, #ffd93d);
+      border: none; border-radius: 10px; padding: 9px 16px;
+      font-size: 13px; font-weight: 800; color: #111114;
+      cursor: pointer; flex-shrink: 0; font-family: system-ui, sans-serif;
+    }
+    #install-banner .ib-close {
+      position: absolute; top: 10px; right: 12px;
+      background: none; border: none; color: #888899;
+      font-size: 18px; cursor: pointer; line-height: 1;
+    }
+    /* iOS install instructions overlay */
+    #ios-overlay {
+      display: none; position: fixed; inset: 0; background: #000000cc;
+      z-index: 1000; align-items: flex-end; justify-content: center;
+    }
+    #ios-overlay.show { display: flex; }
+    #ios-panel {
+      background: #18181c; border-radius: 22px 22px 0 0;
+      padding: 28px 24px 44px; width: 100%; max-width: 480px;
+      border-top: 3px solid #F5C518;
+    }
+    #ios-panel h3 { font-size: 18px; font-weight: 900; color: #FFFFFF; margin-bottom: 6px; font-family: system-ui, sans-serif; }
+    #ios-panel p { font-size: 13px; color: #888899; margin-bottom: 20px; font-family: system-ui, sans-serif; line-height: 1.5; }
+    .ios-step { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+    .ios-step-num { width: 28px; height: 28px; border-radius: 50%; background: #F5C51822; border: 1.5px solid #F5C518; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #F5C518; flex-shrink: 0; font-family: system-ui, sans-serif; }
+    .ios-step-text { font-size: 14px; color: #FFFFFF; line-height: 1.55; font-family: system-ui, sans-serif; padding-top: 4px; }
+    .ios-step-text span { color: #F5C518; font-weight: 700; }
+    #ios-close { width: 100%; margin-top: 8px; background: #23232a; border: 1px solid #2a2a34; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 700; color: #888899; cursor: pointer; font-family: system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
 
+  <!-- Install banner (Android/Desktop Chrome) -->
+  <div id="install-banner">
+    <button class="ib-close" onclick="dismissInstall()">×</button>
+    <div class="ib-icon">👑</div>
+    <div class="ib-text">
+      <div class="ib-title">Add to Home Screen</div>
+      <div class="ib-sub">Install MY Elevation for quick access — works offline too</div>
+    </div>
+    <button class="ib-btn" onclick="triggerInstall()">Install</button>
+  </div>
+
+  <!-- iOS instructions overlay -->
+  <div id="ios-overlay" onclick="closeIosOverlay(event)">
+    <div id="ios-panel">
+      <h3>👑 Add to Home Screen</h3>
+      <p>Install MY Elevation so it opens like an app — no browser bar, works offline.</p>
+      <div class="ios-step">
+        <div class="ios-step-num">1</div>
+        <div class="ios-step-text">Tap the <span>Share button</span> at the bottom of Safari (the box with an arrow pointing up)</div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">2</div>
+        <div class="ios-step-text">Scroll down and tap <span>"Add to Home Screen"</span></div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">3</div>
+        <div class="ios-step-text">Tap <span>"Add"</span> in the top right — done! Find the app on your home screen.</div>
+      </div>
+      <button id="ios-close" onclick="document.getElementById('ios-overlay').classList.remove('show')">Got it ✓</button>
+    </div>
+  </div>
+
+  <script>
+    // ── PWA Install Logic ──
+    let deferredPrompt = null;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+    if (!isInStandaloneMode) {
+      if (isIOS) {
+        // Show iOS instructions button after 3s
+        setTimeout(() => {
+          document.getElementById('install-banner').classList.add('show');
+          document.querySelector('.ib-btn').textContent = 'How to Install';
+          document.querySelector('.ib-btn').onclick = () => {
+            document.getElementById('ios-overlay').classList.add('show');
+          };
+          document.querySelector('.ib-sub').textContent = 'Tap below to add this app to your home screen';
+        }, 3000);
+      } else {
+        // Android / Chrome — listen for beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          setTimeout(() => {
+            document.getElementById('install-banner').classList.add('show');
+          }, 3000);
+        });
+      }
+    }
+
+    function triggerInstall() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          dismissInstall();
+        });
+      }
+    }
+
+    function dismissInstall() {
+      document.getElementById('install-banner').classList.remove('show');
+    }
+
+    function closeIosOverlay(e) {
+      if (e.target === document.getElementById('ios-overlay')) {
+        document.getElementById('ios-overlay').classList.remove('show');
+      }
+    }
+
+  </script>
+  <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
+  <script>
+    // Show loading indicator while Babel compiles
+    document.getElementById('root').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#111114;flex-direction:column;gap:16px"><div style="width:40px;height:40px;border:3px solid #F5C51833;border-top:3px solid #F5C518;border-radius:50%;animation:spin 1s linear infinite"></div><div style="color:#F5C518;font-family:system-ui;font-size:13px;letter-spacing:2px;text-transform:uppercase">Loading...</div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+  </script>
+  <script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+// ─── STORAGE HELPERS ──────────────────────────────────────────────────────────
+function load(key, fallback) {
+  try {
+    const v = localStorage.getItem(key);
+    return v !== null ? JSON.parse(v) : fallback;
+  } catch { return fallback; }
+}
+function save(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+function usePersist(key, fallback) {
+  const [state, setState] = useState(() => load(key, fallback));
+  useEffect(() => { save(key, state); }, [key, state]);
+  return [state, setState];
+}
+
+
+// ─── JOURNAL BRAND TOKENS ─────────────────────────────────────────────────────
+// "No Validation for MY Elevation" journal colors
+const T = {
+  bg:        "#111114",   // deep black
+  surface:   "#18181c",   // dark surface
+  card:      "#1e1e24",   // card bg
+  cardAlt:   "#23232a",   // slightly lighter card
+  border:    "#2a2a34",   // border
+  gold:      "#F5C518",   // journal gold
+  goldLight: "#ffd93d",   // highlight gold
+  goldSoft:  "#F5C51818", // subtle gold bg
+  goldGlow:  "#F5C51828", // glow gold bg
+  pink:      "#E91E8C",   // journal hot pink
+  pinkSoft:  "#E91E8C18", // subtle pink bg
+  pinkGlow:  "#E91E8C28",
+  cream:     "#FFFFFF",   // white text
+  muted:     "#888899",   // muted
+  faint:     "#1e1e2a",   // faint divider
+  white:     "#FFFFFF",
+  // category accents — on-brand
+  fitness:   "#E91E8C",   // hot pink
+  mindset:   "#a855f7",   // violet
+  finance:   "#F5C518",   // gold
+  spiritual: "#e879b0",   // pink-rose
+  elevation: "#F5C518",   // gold
+  custom:    "#6b7280",   // slate
+};
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  {
+    id: "fitness", label: "Fitness", emoji: "💪", color: T.fitness,
+    desc: "Honor your vessel",
+    premadeGoals: ["Lose weight","Build muscle","Run a 5K","Improve flexibility","Drink more water","Sleep 8 hours"],
+  },
+  {
+    id: "mindset", label: "Mindset", emoji: "🧠", color: T.mindset,
+    desc: "Think differently",
+    premadeGoals: ["Daily journaling","Build discipline","Release comparison","Practice gratitude","Read daily","Reduce screen time"],
+  },
+  {
+    id: "finances", label: "Finances", emoji: "💰", color: T.finance,
+    desc: "Claim your abundance",
+    premadeGoals: ["Pay off credit card","Build emergency fund","Save $1,000","Cut monthly expenses","Start investing","Track every dollar"],
+  },
+  {
+    id: "spiritual", label: "Spiritual", emoji: "🙏", color: T.spiritual,
+    desc: "Deepen your faith",
+    premadeGoals: ["Daily prayer","Read the Bible daily","Fast weekly","Study a psalm","Pray with intention","Memorize scripture"],
+  },
+  {
+    id: "elevation", label: "Elevation", emoji: "👑", color: T.elevation,
+    desc: "Become her",
+    premadeGoals: ["Complete 30-day journal","Eliminate a toxic habit","Start a new skill","Build a morning routine","Set firm boundaries","Invest in yourself"],
+  },
+  {
+    id: "custom", label: "Custom", emoji: "✨", color: T.custom,
+    desc: "Your category",
+    premadeGoals: [],
+  },
+];
+
+const FINANCE_TIPS = [
+  { title: "The 50/30/20 Rule", tip: "Split your take-home: 50% needs (rent, bills, food), 30% wants, 20% savings/debt payoff. Start tracking every dollar today." },
+  { title: "Pay Yourself First", tip: "Before paying any bill, transfer a set amount to savings. Even $25 a paycheck builds the habit and the account." },
+  { title: "The Debt Avalanche", tip: "List all debts by interest rate. Pay minimums on everything, then throw every extra dollar at the highest-rate debt first." },
+  { title: "The Debt Snowball", tip: "List all debts smallest to largest. Pay off the smallest balance first for quick wins, then roll that payment to the next debt." },
+  { title: "Reduce Utilization Fast", tip: "Credit utilization above 30% hurts your score. Pay down balances mid-cycle — before your statement closes — for the fastest score bump." },
+  { title: "No-Spend Challenge", tip: "Pick one week a month where you spend zero on non-essentials. At the end, move what you would have spent directly to savings." },
+  { title: "Unsubscribe & Stack", tip: "Go through your bank statement and cancel every subscription you forgot you had. Stack those savings into one debt or goal." },
+  { title: "The 48-Hour Rule", tip: "For every non-essential purchase over $50, wait 48 hours before buying. Most impulse urges disappear on their own." },
+  { title: "Sinking Funds", tip: "Create separate savings buckets for predictable expenses — car tags, Christmas, birthdays. Fund them monthly so nothing ever feels like a surprise." },
+  { title: "Round-Up Savings", tip: "Use your bank's round-up feature or apps like Acorns. Every purchase gets rounded up and the difference goes to savings automatically." },
+];
+
+const SPIRITUAL_CONTENT = [
+  { type: "psalm", ref: "Psalm 23:1", text: "The Lord is my shepherd; I shall not want.", note: "He provides everything you need — even when you can't see it yet." },
+  { type: "psalm", ref: "Psalm 27:1", text: "The Lord is my light and my salvation — whom shall I fear?", note: "You don't walk in the dark. You walk covered." },
+  { type: "psalm", ref: "Psalm 46:5", text: "God is within her, she will not fall.", note: "One of the most powerful reminders. You were built to stand." },
+  { type: "psalm", ref: "Psalm 91:1", text: "Whoever dwells in the shelter of the Most High will rest in the shadow of the Almighty.", note: "Stay close. The shadow of the Almighty is where peace lives." },
+  { type: "psalm", ref: "Psalm 139:14", text: "I praise you because I am fearfully and wonderfully made.", note: "Not accidentally, not barely — wonderfully. Receive that." },
+  { type: "psalm", ref: "Psalm 37:4", text: "Delight yourself in the Lord, and he will give you the desires of your heart.", note: "Alignment first. The desires follow." },
+  { type: "scripture", ref: "Jeremiah 29:11", text: "For I know the plans I have for you — plans to prosper you and not to harm you, plans to give you hope and a future.", note: "His plans don't look like failure." },
+  { type: "scripture", ref: "Philippians 4:13", text: "I can do all things through Christ who strengthens me.", note: "Not some things. All things." },
+  { type: "scripture", ref: "Isaiah 40:31", text: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles.", note: "Tired seasons don't last. Soaring is coming." },
+  { type: "scripture", ref: "Romans 8:28", text: "And we know that in all things God works for the good of those who love him.", note: "Even the hard stuff. Especially the hard stuff." },
+  { type: "scripture", ref: "Proverbs 31:25", text: "She is clothed with strength and dignity; she can laugh at the days to come.", note: "That's you. Dressed in it already." },
+  { type: "scripture", ref: "2 Timothy 1:7", text: "For God has not given us a spirit of fear, but of power, of love, and of a sound mind.", note: "Fear is not from Him. Power is." },
+];
+
+const WATER_GLASSES = 8;
+
+// ─── SMALL COMPONENTS ─────────────────────────────────────────────────────────
+function GoldDivider() {
+  return <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${T.gold}55, transparent)`, margin: "4px 0" }} />;
+}
+
+function Label({ children }) {
+  return <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>{children}</div>;
+}
+
+function GoldBtn({ children, onClick, small, outline, style: sx = {} }) {
+  return (
+    <button onClick={onClick} style={{
+      background: outline ? "transparent" : `linear-gradient(135deg, ${T.gold}, ${T.goldLight})`,
+      border: outline ? `1.5px solid ${T.gold}` : "none",
+      borderRadius: 12, color: outline ? T.gold : T.bg,
+      fontWeight: 800, fontSize: small ? 13 : 15,
+      padding: small ? "9px 16px" : "14px 24px",
+      cursor: "pointer", fontFamily: "inherit",
+      boxShadow: outline ? "none" : `0 4px 18px ${T.gold}33`,
+      ...sx
+    }}>{children}</button>
+  );
+}
+
+function PinkBtn({ children, onClick, small, outline, style: sx = {} }) {
+  return (
+    <button onClick={onClick} style={{
+      background: outline ? "transparent" : `linear-gradient(135deg, ${T.pink}, #ff4db8)`,
+      border: outline ? `1.5px solid ${T.pink}` : "none",
+      borderRadius: 12, color: outline ? T.pink : T.white,
+      fontWeight: 800, fontSize: small ? 13 : 15,
+      padding: small ? "9px 16px" : "14px 24px",
+      cursor: "pointer", fontFamily: "inherit",
+      boxShadow: outline ? "none" : `0 4px 18px ${T.pink}33`,
+      ...sx
+    }}>{children}</button>
+  );
+}
+
+function TextInput({ value, onChange, placeholder, type = "text", multiline }) {
+  const s = {
+    width: "100%", background: T.surface, border: `1px solid ${T.border}`,
+    borderRadius: 11, padding: "12px 14px", color: T.cream, fontSize: 14,
+    outline: "none", boxSizing: "border-box", fontFamily: "inherit",
+    resize: "none", lineHeight: 1.5
+  };
+  return multiline
+    ? <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={3} style={s} />
+    : <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={s} />;
+}
+
+function Ring({ pct, color, size = 60, stroke = 5, children }) {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = Math.min((pct || 0) / 100, 1) * circ;
+  return (
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", position: "absolute", top: 0, left: 0 }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={T.faint} strokeWidth={stroke} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+          style={{ transition: "stroke-dasharray 0.6s ease" }} />
+      </svg>
+      <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Diamond({ color = T.gold, size = 8 }) {
+  return <span style={{ display:"inline-block", width:size, height:size, background:color, transform:"rotate(45deg)", flexShrink:0 }} />;
+}
+
+// ─── ONBOARDING ───────────────────────────────────────────────────────────────
+function Onboarding({ onDone }) {
+  const [step, setStep] = useState(0);
+  const [name, setName] = useState("");
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", padding: "52px 28px 36px" }}>
+      {/* Progress dots */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 56 }}>
+        {[0,1].map(i => (
+          <div key={i} style={{ height: 2, flex: i === step ? 3 : 1, borderRadius: 99, background: i === step ? T.gold : T.border, transition: "all 0.3s" }} />
+        ))}
+      </div>
+      <div style={{ flex: 1 }}>
+        {step === 0 && (
+          <>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 18 }}>— EVOLVING WOMEN —</div>
+            <h1 style={{ fontSize: 38, fontWeight: 900, color: T.white, lineHeight: 1.1, margin: "0 0 6px", fontFamily: "inherit" }}>
+              <span style={{ color: T.white }}>NO </span>
+              <span style={{ color: T.gold }}>VALIDATION</span>
+            </h1>
+            <h1 style={{ fontSize: 38, fontWeight: 900, lineHeight: 1.1, margin: "0 0 20px", fontFamily: "inherit" }}>
+              <span style={{ color: T.muted, fontSize: 20 }}>for </span>
+              <span style={{ color: T.pink }}>MY ELEVATION.</span>
+            </h1>
+            <div style={{ width: 48, height: 3, background: `linear-gradient(90deg, ${T.gold}, ${T.pink})`, margin: "0 0 22px", borderRadius: 99 }} />
+            <p style={{ color: T.muted, fontSize: 16, lineHeight: 1.7, margin: 0 }}>
+              Discipline. Confidence. Growth.<br />Your companion app for the 30-day elevation journal.
+            </p>
+          </>
+        )}
+        {step === 1 && (
+          <>
+            <h1 style={{ fontSize: 34, fontWeight: 900, color: T.white, lineHeight: 1.15, margin: "0 0 10px", fontFamily: "inherit" }}>
+              What's your name?
+            </h1>
+            <p style={{ color: T.muted, fontSize: 15, marginBottom: 28 }}>We'll make this yours.</p>
+            <TextInput value={name} onChange={setName} placeholder="Your first name..." />
+          </>
+        )}
+      </div>
+      <GoldBtn
+        onClick={() => { if (step === 0) setStep(1); else onDone(name.trim() || "Queen"); }}
+        style={{ width: "100%", opacity: step === 1 && !name.trim() ? 0.4 : 1, pointerEvents: step === 1 && !name.trim() ? "none" : "auto" }}
+      >{step === 0 ? "Begin your elevation →" : "Enter →"}</GoldBtn>
+    </div>
+  );
+}
+
+// ─── HOME ─────────────────────────────────────────────────────────────────────
+function HomeScreen({ userName, onNav }) {
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const affirmations = [
+    "I do not need permission to grow.",
+    "I am becoming her daily.",
+    "I trust my journey.",
+    "I release comparison.",
+    "I am disciplined and focused.",
+    "I am evolving every day.",
+    "No excuses. No validation. Just growth.",
+  ];
+  const todayAffirmation = affirmations[new Date().getDay()];
+  const cats = CATEGORIES.filter(c => c.id !== "custom");
+  return (
+    <div style={{ padding: "32px 0 0" }}>
+      {/* Brand header */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 10 }}>— EVOLVING WOMEN —</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 13, color: T.muted, marginBottom: 2 }}>{greet}</div>
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: T.white, margin: 0 }}>{userName} 👑</h2>
+          </div>
+          <div style={{
+            width: 46, height: 46, borderRadius: 12, flexShrink: 0,
+            background: `linear-gradient(135deg, ${T.gold}, ${T.pink})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 20, fontWeight: 900, color: T.white
+          }}>{userName[0]}</div>
+        </div>
+      </div>
+
+      {/* Today's affirmation card */}
+      <div style={{
+        background: T.goldGlow, border: `1px solid ${T.gold}44`,
+        borderRadius: 20, padding: "22px", marginBottom: 22,
+        borderLeft: `3px solid ${T.gold}`
+      }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 10 }}>Today's Affirmation</div>
+        <p style={{ fontSize: 17, fontWeight: 700, color: T.white, lineHeight: 1.55, margin: 0 }}>
+          "{todayAffirmation}"
+        </p>
+      </div>
+
+      {/* Categories grid */}
+      <Label>Your categories</Label>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+        {cats.map(c => (
+          <div key={c.id} onClick={() => onNav(c.id)} style={{
+            background: T.card, border: `1px solid ${c.color}44`,
+            borderRadius: 18, padding: "18px 16px", cursor: "pointer",
+          }}>
+            <div style={{ fontSize: 26, marginBottom: 8 }}>{c.emoji}</div>
+            <div style={{ fontWeight: 800, fontSize: 14, color: T.white, marginBottom: 2 }}>{c.label}</div>
+            <div style={{ fontSize: 11, color: T.muted }}>{c.desc}</div>
+          </div>
+        ))}
+        <div onClick={() => onNav("custom")} style={{
+          background: T.card, border: `1px dashed ${T.border}`,
+          borderRadius: 18, padding: "18px 16px", cursor: "pointer"
+        }}>
+          <div style={{ fontSize: 26, marginBottom: 8 }}>✨</div>
+          <div style={{ fontWeight: 800, fontSize: 14, color: T.white, marginBottom: 2 }}>Custom</div>
+          <div style={{ fontSize: 11, color: T.muted }}>Your category</div>
+        </div>
+      </div>
+
+      {/* Flashcard nudge */}
+      <div onClick={() => onNav("flashcards")} style={{
+        background: T.card, border: `1px solid ${T.border}`,
+        borderRadius: 18, padding: "18px", display: "flex", alignItems: "center", gap: 14,
+        marginBottom: 8, cursor: "pointer"
+      }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+          background: T.pinkSoft, border: `1px solid ${T.pink}44`,
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22
+        }}>🃏</div>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 14, color: T.white }}>Affirmation Flashcards</div>
+          <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>Journal affirmations + A&P 2 + custom cards</div>
+        </div>
+        <div style={{ marginLeft: "auto", color: T.muted, fontSize: 18 }}>›</div>
+      </div>
+
+      {/* Journal nudge */}
+      <div onClick={() => onNav("journal")} style={{
+        background: T.card, border: `1px solid ${T.border}`,
+        borderRadius: 18, padding: "18px", display: "flex", alignItems: "center", gap: 14,
+        marginBottom: 8, cursor: "pointer"
+      }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+          background: T.goldSoft, border: `1px solid ${T.gold}44`,
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22
+        }}>✍️</div>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 14, color: T.white }}>Daily Journal</div>
+          <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>30 elevation prompts — write today's entry</div>
+        </div>
+        <div style={{ marginLeft: "auto", color: T.muted, fontSize: 18 }}>›</div>
+      </div>
+
+      {/* Wins nudge */}
+      <div onClick={() => onNav("wins")} style={{
+        background: T.card, border: `1px solid ${T.border}`,
+        borderRadius: 18, padding: "18px", display: "flex", alignItems: "center", gap: 14,
+        marginBottom: 8, cursor: "pointer"
+      }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+          background: T.goldSoft, border: `1px solid ${T.gold}44`,
+          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22
+        }}>🏆</div>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 14, color: T.white }}>Wins Tracker</div>
+          <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>Log every victory. Big or small — it counts.</div>
+        </div>
+        <div style={{ marginLeft: "auto", color: T.muted, fontSize: 18 }}>›</div>
+      </div>
+
+      {/* Footer diamonds */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 28, marginBottom: 4 }}>
+        {[T.pink, T.gold, T.pink, T.gold, T.pink].map((c, i) => <Diamond key={i} color={c} />)}
+      </div>
+      <div style={{ textAlign: "center", fontSize: 9, letterSpacing: 2, color: T.gold, textTransform: "uppercase", marginBottom: 14 }}>
+        No Excuses. No Validation. Just Growth.
+      </div>
+
+      {/* Add to Home Screen button */}
+      {!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone && (
+        <div
+          onClick={() => {
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            if (isIOS) {
+              document.getElementById('ios-overlay').classList.add('show');
+            } else {
+              document.getElementById('install-banner').classList.add('show');
+            }
+          }}
+          style={{
+            background: T.card, border: `1px solid ${T.gold}44`,
+            borderRadius: 14, padding: "13px 16px",
+            display: "flex", alignItems: "center", gap: 12,
+            marginBottom: 24, cursor: "pointer"
+          }}
+        >
+          <div style={{ fontSize: 22 }}>📲</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 800, fontSize: 13, color: T.white }}>Add to Home Screen</div>
+            <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>Install this app — works on any device</div>
+          </div>
+          <div style={{ color: T.gold, fontSize: 16, fontWeight: 700 }}>›</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── GOAL MANAGER ─────────────────────────────────────────────────────────────
+function GoalManager({ cat, goals, setGoals }) {
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ title: "", target: "", current: "", unit: "", habit1: "", habit2: "", habit3: "", why: "" });
+  const [usePreset, setUsePreset] = useState("");
+  const myGoals = goals.filter(g => g.catId === cat.id);
+
+  const applyPreset = (title) => { setUsePreset(title); setForm(f => ({ ...f, title })); };
+
+  const save = () => {
+    if (!form.title.trim()) return;
+    const habits = [form.habit1, form.habit2, form.habit3].filter(Boolean);
+    setGoals(p => [...p, {
+      id: Date.now(), catId: cat.id, title: form.title,
+      target: Number(form.target) || 0, current: Number(form.current) || 0,
+      unit: form.unit || "progress", habits,
+      done: habits.map(() => false), streak: 0, why: form.why
+    }]);
+    setAdding(false);
+    setForm({ title: "", target: "", current: "", unit: "", habit1: "", habit2: "", habit3: "", why: "" });
+    setUsePreset("");
+  };
+
+  const toggleHabit = (gId, i) => {
+    setGoals(p => p.map(g => g.id === gId ? { ...g, done: g.done.map((d, j) => j === i ? !d : d) } : g));
+  };
+
+  const updateProgress = (gId, val) => {
+    setGoals(p => p.map(g => g.id === gId ? { ...g, current: Math.min(Number(val) || 0, g.target || 999) } : g));
+  };
+
+  const deleteGoal = (gId) => setGoals(p => p.filter(g => g.id !== gId));
+
+  return (
+    <div>
+      {cat.premadeGoals.length > 0 && (
+        <div style={{ marginBottom: 18 }}>
+          <Label>Quick add</Label>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {cat.premadeGoals.map(g => (
+              <button key={g} onClick={() => { applyPreset(g); setAdding(true); }} style={{
+                background: usePreset === g ? cat.color + "22" : T.surface,
+                border: `1px solid ${usePreset === g ? cat.color : T.border}`,
+                borderRadius: 20, color: usePreset === g ? cat.color : T.muted,
+                fontSize: 12, fontWeight: 600, padding: "7px 14px",
+                cursor: "pointer", fontFamily: "inherit"
+              }}>{g}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {myGoals.length === 0 && !adding && (
+        <div style={{ background: T.card, border: `1px dashed ${T.border}`, borderRadius: 18, padding: "32px 20px", textAlign: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>{cat.emoji}</div>
+          <div style={{ fontSize: 14, color: T.muted, lineHeight: 1.6 }}>No {cat.label.toLowerCase()} goals yet.<br />Add your first one below.</div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 16 }}>
+        {myGoals.map(g => {
+          const pct = g.target > 0 ? Math.min(Math.round((g.current / g.target) * 100), 100) : 0;
+          return (
+            <div key={g.id} style={{ background: T.card, borderRadius: 18, border: `1px solid ${cat.color}33`, overflow: "hidden" }}>
+              <div style={{ height: 3, background: `linear-gradient(90deg, ${cat.color}, ${T.pink})` }} />
+              <div style={{ padding: "16px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
+                  <Ring pct={pct} color={cat.color} size={52} stroke={5}>
+                    <span style={{ fontSize: 16 }}>{cat.emoji}</span>
+                  </Ring>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: T.white }}>{g.title}</div>
+                    {g.why && <div style={{ fontSize: 11, color: T.muted, fontStyle: "italic", marginTop: 3 }}>"{g.why}"</div>}
+                  </div>
+                  <button onClick={() => deleteGoal(g.id)} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 16 }}>×</button>
+                </div>
+
+                {g.target > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ height: 5, background: T.faint, borderRadius: 99, overflow: "hidden", marginBottom: 8 }}>
+                      <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${cat.color}, ${T.pink})`, borderRadius: 99, transition: "width 0.4s" }} />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 11, color: T.muted }}>Progress:</span>
+                      <input type="number" value={g.current === 0 ? "" : g.current}
+                        placeholder="0"
+                        onChange={e => updateProgress(g.id, e.target.value === "" ? 0 : e.target.value)}
+                        onFocus={e => e.target.select()}
+                        style={{ width: 70, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 8, padding: "6px 10px", color: T.white, fontSize: 13, outline: "none" }} />
+                      <span style={{ fontSize: 11, color: T.muted }}>/ {g.target} {g.unit}</span>
+                      <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 700, color: cat.color }}>{pct}%</span>
+                    </div>
+                  </div>
+                )}
+
+                {g.habits.length > 0 && (
+                  <div>
+                    <Label>Daily habits</Label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {g.habits.map((h, i) => (
+                        <div key={i} onClick={() => toggleHabit(g.id, i)} style={{
+                          display: "flex", alignItems: "center", gap: 10,
+                          padding: "9px 12px", borderRadius: 10, cursor: "pointer",
+                          background: g.done[i] ? cat.color + "18" : T.surface,
+                          border: `1px solid ${g.done[i] ? cat.color + "55" : T.border}`,
+                        }}>
+                          <div style={{
+                            width: 19, height: 19, borderRadius: 5, flexShrink: 0,
+                            background: g.done[i] ? cat.color : "transparent",
+                            border: `2px solid ${g.done[i] ? cat.color : T.border}`,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            color: T.bg, fontSize: 11
+                          }}>{g.done[i] ? "✓" : ""}</div>
+                          <span style={{ fontSize: 13, color: g.done[i] ? T.white : T.muted, textDecoration: g.done[i] ? "line-through" : "none" }}>{h}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <GoldBtn small outline onClick={() => setAdding(true)} style={{ width: "100%" }}>+ Create Goal</GoldBtn>
+
+      {adding && (
+        <div style={{ position: "fixed", inset: 0, background: "#000000dd", display: "flex", alignItems: "flex-end", zIndex: 200 }}>
+          <div style={{ background: T.surface, borderRadius: "22px 22px 0 0", padding: "26px 22px 36px", width: "100%", maxHeight: "85vh", overflowY: "auto", boxSizing: "border-box" }}>
+            <div style={{ fontWeight: 900, fontSize: 17, color: T.white, marginBottom: 14 }}>New {cat.label} Goal</div>
+            <GoldDivider />
+            <div style={{ height: 14 }} />
+            {[
+              { key: "title", label: "Goal title *", placeholder: "What are you working toward?" },
+              { key: "why", label: "Your why (optional)", placeholder: "Why does this matter to you?" },
+              { key: "target", label: "Target number", placeholder: "e.g. 20", type: "number" },
+              { key: "current", label: "Starting point", placeholder: "e.g. 0", type: "number" },
+              { key: "unit", label: "Unit", placeholder: "e.g. lbs, %, days, dollars..." },
+              { key: "habit1", label: "Daily habit #1", placeholder: "What will you do every day?" },
+              { key: "habit2", label: "Daily habit #2 (optional)", placeholder: "" },
+              { key: "habit3", label: "Daily habit #3 (optional)", placeholder: "" },
+            ].map(f => (
+              <div key={f.key} style={{ marginBottom: 13 }}>
+                <Label>{f.label}</Label>
+                <TextInput value={form[f.key]} onChange={v => setForm(p => ({ ...p, [f.key]: v }))} placeholder={f.placeholder} type={f.type} />
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+              <button onClick={() => setAdding(false)} style={{ flex: 1, background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, color: T.muted, fontWeight: 700, fontSize: 14, padding: "13px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+              <GoldBtn onClick={save} style={{ flex: 2, opacity: form.title.trim() ? 1 : 0.4, pointerEvents: form.title.trim() ? "auto" : "none" }}>Save Goal</GoldBtn>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── FITNESS SCREEN ───────────────────────────────────────────────────────────
+function FitnessScreen({ goals, setGoals }) {
+  const cat = CATEGORIES.find(c => c.id === "fitness");
+  const [water, setWater] = usePersist("fitness_water", 0);
+  const [movements, setMovements] = usePersist("fitness_movements", []);
+  const [newMove, setNewMove] = useState("");
+  const [meals, setMeals] = usePersist("fitness_meals", []);
+  const [newMeal, setNewMeal] = useState("");
+  const [activeTracker, setActiveTracker] = useState("water");
+
+  const trackers = [
+    { id: "water", label: "💧 Water" },
+    { id: "movement", label: "🏃 Movement" },
+    { id: "food", label: "🥗 Food" },
+  ];
+
+  return (
+    <div>
+      <div style={{ marginBottom: 24 }}>
+        <Label>My fitness goals</Label>
+        <GoalManager cat={cat} goals={goals} setGoals={setGoals} />
+      </div>
+      <GoldDivider />
+      <div style={{ height: 20 }} />
+      <Label>Daily trackers</Label>
+      <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+        {trackers.map(t => (
+          <button key={t.id} onClick={() => setActiveTracker(t.id)} style={{
+            flex: 1, background: activeTracker === t.id ? T.pinkSoft : T.surface,
+            border: `1px solid ${activeTracker === t.id ? T.pink : T.border}`,
+            borderRadius: 10, color: activeTracker === t.id ? T.pink : T.muted,
+            fontSize: 12, fontWeight: 700, padding: "9px 6px",
+            cursor: "pointer", fontFamily: "inherit"
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {activeTracker === "water" && (
+        <div style={{ background: T.card, borderRadius: 18, padding: "20px", border: `1px solid ${T.border}` }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: T.white, marginBottom: 4 }}>Water Intake</div>
+          <div style={{ color: T.muted, fontSize: 13, marginBottom: 18 }}>Goal: 8 glasses per day</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+            {Array.from({ length: WATER_GLASSES }).map((_, i) => (
+              <button key={i} onClick={() => setWater(i + 1)} style={{
+                width: 44, height: 44, borderRadius: 12, border: "none",
+                background: i < water ? T.pink : T.surface,
+                fontSize: 20, cursor: "pointer", transition: "all 0.2s"
+              }}>💧</button>
+            ))}
+          </div>
+          <div style={{ fontSize: 14, color: T.white, fontWeight: 700 }}>{water} / {WATER_GLASSES} glasses</div>
+          <div style={{ height: 5, background: T.faint, borderRadius: 99, marginTop: 10, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${(water / WATER_GLASSES) * 100}%`, background: `linear-gradient(90deg, ${T.pink}, ${T.gold})`, borderRadius: 99, transition: "width 0.4s" }} />
+          </div>
+          {water >= WATER_GLASSES && <div style={{ marginTop: 12, fontSize: 13, color: T.gold, fontWeight: 700 }}>🏆 Goal hit! You're hydrated Queen!</div>}
+        </div>
+      )}
+
+      {activeTracker === "movement" && (
+        <div style={{ background: T.card, borderRadius: 18, padding: "20px", border: `1px solid ${T.border}` }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: T.white, marginBottom: 14 }}>Movement Log</div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <input value={newMove} onChange={e => setNewMove(e.target.value)}
+              placeholder="e.g. 30 min walk, 20 squats..."
+              style={{ flex: 1, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 12px", color: T.white, fontSize: 13, outline: "none", fontFamily: "inherit" }} />
+            <PinkBtn small onClick={() => { if (newMove.trim()) { setMovements(p => [...p, { id: Date.now(), text: newMove.trim(), done: false }]); setNewMove(""); } }}>Add</PinkBtn>
+          </div>
+          {movements.length === 0 && <div style={{ color: T.muted, fontSize: 13 }}>Log today's movement here</div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            {movements.map(m => (
+              <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, background: m.done ? T.pinkSoft : T.surface, border: `1px solid ${m.done ? T.pink + "44" : T.border}` }}>
+                <div onClick={() => setMovements(p => p.map(x => x.id === m.id ? { ...x, done: !x.done } : x))}
+                  style={{ width: 19, height: 19, borderRadius: 5, background: m.done ? T.pink : "transparent", border: `2px solid ${m.done ? T.pink : T.border}`, display: "flex", alignItems: "center", justifyContent: "center", color: T.white, fontSize: 11, cursor: "pointer", flexShrink: 0 }}>{m.done ? "✓" : ""}</div>
+                <span style={{ flex: 1, fontSize: 13, color: m.done ? T.white : T.muted, textDecoration: m.done ? "line-through" : "none" }}>{m.text}</span>
+                <button onClick={() => setMovements(p => p.filter(x => x.id !== m.id))} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 16 }}>×</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTracker === "food" && (
+        <div style={{ background: T.card, borderRadius: 18, padding: "20px", border: `1px solid ${T.border}` }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: T.white, marginBottom: 14 }}>Food Log</div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+            <input value={newMeal} onChange={e => setNewMeal(e.target.value)}
+              placeholder="e.g. Breakfast: oatmeal + fruit..."
+              style={{ flex: 1, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 12px", color: T.white, fontSize: 13, outline: "none", fontFamily: "inherit" }} />
+            <GoldBtn small onClick={() => { if (newMeal.trim()) { setMeals(p => [...p, { id: Date.now(), text: newMeal.trim() }]); setNewMeal(""); } }}>Add</GoldBtn>
+          </div>
+          {meals.length === 0 && <div style={{ color: T.muted, fontSize: 13 }}>Log your meals here</div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            {meals.map(m => (
+              <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, background: T.surface, border: `1px solid ${T.border}` }}>
+                <span style={{ fontSize: 13, color: T.white, flex: 1 }}>{m.text}</span>
+                <button onClick={() => setMeals(p => p.filter(x => x.id !== m.id))} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 16 }}>×</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── FINANCES SCREEN ──────────────────────────────────────────────────────────
+function FinancesScreen({ goals, setGoals }) {
+  const cat = CATEGORIES.find(c => c.id === "finances");
+  const [activeTab, setActiveTab] = useState("goals");
+  const [savings, setSavings] = usePersist("finances_savings", []);
+  const [newSaving, setNewSaving] = useState({ label: "", target: "", current: "" });
+
+  const tabs = [{ id: "goals", label: "Goals" }, { id: "tracker", label: "Savings" }, { id: "tips", label: "Tips" }];
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+            flex: 1, background: activeTab === t.id ? T.goldSoft : T.surface,
+            border: `1px solid ${activeTab === t.id ? T.gold : T.border}`,
+            borderRadius: 10, color: activeTab === t.id ? T.gold : T.muted,
+            fontSize: 13, fontWeight: 700, padding: "9px",
+            cursor: "pointer", fontFamily: "inherit"
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {activeTab === "goals" && <GoalManager cat={cat} goals={goals} setGoals={setGoals} />}
+
+      {activeTab === "tracker" && (
+        <div>
+          <Label>Custom money saver tracker</Label>
+          <div style={{ background: T.card, borderRadius: 18, padding: "18px", marginBottom: 16, border: `1px solid ${T.border}` }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }}>
+              {[
+                { key: "label", placeholder: "What are you saving for? (e.g. Emergency fund)" },
+                { key: "target", placeholder: "Target $ amount", type: "number" },
+                { key: "current", placeholder: "Current amount saved", type: "number" },
+              ].map(f => (
+                <input key={f.key} type={f.type || "text"} value={newSaving[f.key]}
+                  onChange={e => setNewSaving(p => ({ ...p, [f.key]: e.target.value }))}
+                  placeholder={f.placeholder}
+                  style={{ width: "100%", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "10px 12px", color: T.white, fontSize: 13, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+              ))}
+              <GoldBtn small onClick={() => {
+                if (!newSaving.label.trim()) return;
+                setSavings(p => [...p, { ...newSaving, id: Date.now(), current: Number(newSaving.current) || 0, target: Number(newSaving.target) || 0 }]);
+                setNewSaving({ label: "", target: "", current: "" });
+              }}>Add Tracker</GoldBtn>
+            </div>
+          </div>
+          {savings.map(s => {
+            const pct = s.target > 0 ? Math.min(Math.round((s.current / s.target) * 100), 100) : 0;
+            return (
+              <div key={s.id} style={{ background: T.card, borderRadius: 16, padding: "16px", marginBottom: 10, border: `1px solid ${T.border}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: T.white }}>{s.label}</div>
+                  <button onClick={() => setSavings(p => p.filter(x => x.id !== s.id))} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 16 }}>×</button>
+                </div>
+                <div style={{ height: 6, background: T.faint, borderRadius: 99, overflow: "hidden", marginBottom: 8 }}>
+                  <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${T.gold}, ${T.pink})`, borderRadius: 99 }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                  <span style={{ fontSize: 12, color: T.muted }}>${s.current.toLocaleString()} / ${s.target.toLocaleString()}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.gold }}>{pct}%</span>
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input
+                    type="number"
+                    defaultValue={s.current}
+                    placeholder="Update amount saved"
+                    id={`saving-${s.id}`}
+                    style={{ flex: 1, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "9px 12px", color: T.white, fontSize: 13, outline: "none", fontFamily: "inherit" }}
+                  />
+                  <GoldBtn small onClick={() => {
+                    const val = document.getElementById(`saving-${s.id}`).value;
+                    setSavings(p => p.map(x => x.id === s.id ? { ...x, current: Number(val) || 0 } : x));
+                  }}>Update</GoldBtn>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {activeTab === "tips" && (
+        <div>
+          <div style={{ fontSize: 13, color: T.muted, marginBottom: 16, lineHeight: 1.6 }}>Money tips to help you level up financially — one step at a time.</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {FINANCE_TIPS.map((tip, i) => (
+              <div key={i} style={{ background: T.card, borderRadius: 16, padding: "16px", border: `1px solid ${T.border}` }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <div style={{ width: 3, borderRadius: 99, background: `linear-gradient(180deg, ${T.gold}, ${T.pink})`, alignSelf: "stretch", flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 13, color: T.gold, marginBottom: 6 }}>{tip.title}</div>
+                    <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.65 }}>{tip.tip}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── SPIRITUAL SCREEN ─────────────────────────────────────────────────────────
+function SpiritualScreen({ goals, setGoals }) {
+  const cat = CATEGORIES.find(c => c.id === "spiritual");
+  const [activeTab, setActiveTab] = useState("goals");
+  const [filter, setFilter] = useState("all");
+  const [cardIdx, setCardIdx] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+
+  const filtered = filter === "all" ? SPIRITUAL_CONTENT : SPIRITUAL_CONTENT.filter(s => s.type === filter);
+  const card = filtered[cardIdx % filtered.length];
+  const tabs = [{ id: "goals", label: "Goals" }, { id: "word", label: "The Word" }];
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
+            flex: 1, background: activeTab === t.id ? T.pinkSoft : T.surface,
+            border: `1px solid ${activeTab === t.id ? T.pink : T.border}`,
+            borderRadius: 10, color: activeTab === t.id ? T.pink : T.muted,
+            fontSize: 13, fontWeight: 700, padding: "9px",
+            cursor: "pointer", fontFamily: "inherit"
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {activeTab === "goals" && <GoalManager cat={cat} goals={goals} setGoals={setGoals} />}
+
+      {activeTab === "word" && (
+        <div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+            {[{ id: "all", label: "All" }, { id: "psalm", label: "Psalms" }, { id: "scripture", label: "Scripture" }].map(f => (
+              <button key={f.id} onClick={() => { setFilter(f.id); setCardIdx(0); setFlipped(false); }} style={{
+                flex: 1, background: filter === f.id ? T.goldSoft : T.surface,
+                border: `1px solid ${filter === f.id ? T.gold : T.border}`,
+                borderRadius: 10, color: filter === f.id ? T.gold : T.muted,
+                fontSize: 12, fontWeight: 700, padding: "8px",
+                cursor: "pointer", fontFamily: "inherit"
+              }}>{f.label}</button>
+            ))}
+          </div>
+
+          {/* Flip card */}
+          <div onClick={() => setFlipped(f => !f)} style={{ perspective: "1000px", cursor: "pointer", marginBottom: 16 }}>
+            <div style={{
+              position: "relative", width: "100%", paddingTop: "58%",
+              transformStyle: "preserve-3d",
+              transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+              transition: "transform 0.45s cubic-bezier(.4,0,.2,1)"
+            }}>
+              <div style={{
+                position: "absolute", inset: 0, backfaceVisibility: "hidden",
+                background: T.goldGlow, border: `1.5px solid ${T.gold}55`,
+                borderRadius: 22, display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center", padding: "28px 22px", textAlign: "center"
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 14 }}>{card.ref}</div>
+                <p style={{ fontSize: 17, fontWeight: 700, color: T.white, lineHeight: 1.6, margin: 0 }}>"{card.text}"</p>
+                <div style={{ marginTop: 16, fontSize: 11, color: T.muted }}>Tap for reflection</div>
+              </div>
+              <div style={{
+                position: "absolute", inset: 0, backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)", background: T.card,
+                border: `1px solid ${T.pink}44`,
+                borderRadius: 22, display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center", padding: "28px 22px", textAlign: "center"
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: T.muted, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 12 }}>Reflection</div>
+                <p style={{ fontSize: 15, color: T.white, lineHeight: 1.7, margin: 0 }}>{card.note}</p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 24 }}>
+            <button onClick={() => { setFlipped(false); setTimeout(() => setCardIdx(i => (i - 1 + filtered.length) % filtered.length), 170); }}
+              style={{ width: 46, height: 46, borderRadius: 12, border: `1px solid ${T.border}`, background: T.card, color: T.white, fontSize: 18, cursor: "pointer" }}>‹</button>
+            <span style={{ color: T.muted, fontSize: 13, fontWeight: 600 }}>{(cardIdx % filtered.length) + 1} / {filtered.length}</span>
+            <button onClick={() => { setFlipped(false); setTimeout(() => setCardIdx(i => (i + 1) % filtered.length), 170); }}
+              style={{ width: 46, height: 46, borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.pink})`, color: T.white, fontSize: 18, cursor: "pointer" }}>›</button>
+          </div>
+
+          <Label>All verses</Label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {filtered.map((s, i) => (
+              <div key={i} style={{ background: T.card, borderRadius: 14, padding: "14px 16px", border: `1px solid ${T.border}`, borderLeft: `3px solid ${T.gold}` }}>
+                <div style={{ fontWeight: 700, fontSize: 12, color: T.gold, marginBottom: 6 }}>{s.ref}</div>
+                <div style={{ fontSize: 13, color: T.white, lineHeight: 1.6, fontStyle: "italic" }}>"{s.text}"</div>
+                <div style={{ fontSize: 11, color: T.muted, marginTop: 7, lineHeight: 1.5 }}>{s.note}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── GENERIC CATEGORY SCREEN ──────────────────────────────────────────────────
+function CategoryScreen({ catId, goals, setGoals }) {
+  const cat = CATEGORIES.find(c => c.id === catId) || CATEGORIES[CATEGORIES.length - 1];
+  if (catId === "fitness") return <FitnessScreen goals={goals} setGoals={setGoals} />;
+  if (catId === "finances") return <FinancesScreen goals={goals} setGoals={setGoals} />;
+  if (catId === "spiritual") return <SpiritualScreen goals={goals} setGoals={setGoals} />;
+  return <GoalManager cat={cat} goals={goals} setGoals={setGoals} />;
+}
+
+// ─── FLASHCARDS SCREEN ────────────────────────────────────────────────────────
+const BASE_CARDS = [
+  { id: 1, front: "I do not need permission to grow.", back: "Your growth is not up for a vote.", cat: "Affirmation", color: T.gold },
+  { id: 2, front: "I am becoming her daily.", back: "She is not far away. She is who you are right now, just a little more intentional.", cat: "Affirmation", color: T.pink },
+  { id: 3, front: "I trust my journey.", back: "Every detour was direction. Every delay was preparation.", cat: "Affirmation", color: T.gold },
+  { id: 4, front: "I release comparison.", back: "Her path is not your path. Your timeline is exactly right.", cat: "Affirmation", color: T.pink },
+  { id: 5, front: "I am disciplined and focused.", back: "Discipline is self-love in action. You show up because you're worth it.", cat: "Affirmation", color: T.gold },
+  { id: 6, front: "I am evolving every day.", back: "You don't have to be perfect. You just have to be consistent.", cat: "Affirmation", color: T.pink },
+  { id: 7, front: "No excuses. No validation. Just growth.", back: "This is your season. Protect it.", cat: "Affirmation", color: T.gold },
+  { id: 8, front: "She chose herself — over and over again.", back: "That's not small. That's the whole thing.", cat: "Affirmation", color: T.pink },
+];
+
+function FlashcardsScreen() {
+  const [customCards, setCustomCards] = usePersist("flashcards_custom", []);
+  const cards = [...BASE_CARDS, ...customCards];
+  const setCards = (updater) => {
+    const next = typeof updater === "function" ? updater([...BASE_CARDS, ...customCards]) : updater;
+    setCustomCards(next.filter(c => c.custom));
+  };
+  const [idx, setIdx] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ front: "", back: "", cat: "Affirmation", color: T.gold });
+  const [filterCat, setFilterCat] = useState("All");
+
+  const allCats = ["All", ...Array.from(new Set(cards.map(c => c.cat)))];
+  const filtered = filterCat === "All" ? cards : cards.filter(c => c.cat === filterCat);
+  const card = filtered[idx % filtered.length];
+
+  const colors = [T.gold, T.goldLight, T.pink, T.mindset, T.finance, T.spiritual];
+
+  const save = () => {
+    if (!form.front.trim()) return;
+    setCards(p => [...p, { id: Date.now(), ...form, custom: true }]);
+    setAdding(false);
+    setForm({ front: "", back: "", cat: "Affirmation", color: T.gold });
+  };
+
+  const go = (dir) => {
+    setFlipped(false);
+    setTimeout(() => setIdx(i => (i + dir + filtered.length) % filtered.length), 170);
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", marginBottom: 18, paddingBottom: 4, scrollbarWidth: "none" }}>
+        {allCats.map(c => (
+          <button key={c} onClick={() => { setFilterCat(c); setIdx(0); setFlipped(false); }} style={{
+            background: filterCat === c ? T.goldSoft : T.surface,
+            border: `1px solid ${filterCat === c ? T.gold : T.border}`,
+            borderRadius: 20, color: filterCat === c ? T.gold : T.muted,
+            fontSize: 12, fontWeight: 700, padding: "7px 14px",
+            cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap"
+          }}>{c}</button>
+        ))}
+      </div>
+
+      {card && (
+        <div onClick={() => setFlipped(f => !f)} style={{ perspective: "1000px", cursor: "pointer", marginBottom: 16 }}>
+          <div style={{
+            position: "relative", width: "100%", paddingTop: "60%",
+            transformStyle: "preserve-3d",
+            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+            transition: "transform 0.42s cubic-bezier(.4,0,.2,1)"
+          }}>
+            <div style={{
+              position: "absolute", inset: 0, backfaceVisibility: "hidden",
+              background: `linear-gradient(145deg, ${card.color}22, ${card.color}08)`,
+              border: `1.5px solid ${card.color}66`,
+              borderRadius: 22, display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center", padding: "28px 24px", textAlign: "center"
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: card.color, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 14 }}>{card.cat}</div>
+              <p style={{ fontSize: 19, fontWeight: 700, color: T.white, lineHeight: 1.55, margin: 0 }}>{card.front}</p>
+              {card.back && <div style={{ marginTop: 16, fontSize: 11, color: T.muted }}>Tap for back</div>}
+            </div>
+            <div style={{
+              position: "absolute", inset: 0, backfaceVisibility: "hidden",
+              transform: "rotateY(180deg)", background: T.card,
+              border: `1px solid ${T.border}`, borderRadius: 22,
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center", padding: "28px 24px", textAlign: "center"
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: T.muted, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 12 }}>Reminder</div>
+              <p style={{ fontSize: 15, color: T.white, lineHeight: 1.7, margin: 0 }}>{card.back}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginBottom: 20 }}>
+        <button onClick={() => go(-1)} style={{ width: 46, height: 46, borderRadius: 12, border: `1px solid ${T.border}`, background: T.card, color: T.white, fontSize: 18, cursor: "pointer" }}>‹</button>
+        <span style={{ color: T.muted, fontSize: 13, fontWeight: 600 }}>{(idx % filtered.length) + 1} / {filtered.length}</span>
+        <button onClick={() => go(1)} style={{ width: 46, height: 46, borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${T.gold}, ${T.pink})`, color: T.white, fontSize: 18, cursor: "pointer" }}>›</button>
+      </div>
+
+      <GoldBtn small outline onClick={() => setAdding(true)} style={{ width: "100%", marginBottom: 20 }}>+ Add Custom Card</GoldBtn>
+
+      {cards.filter(c => c.custom).length > 0 && (
+        <div style={{ marginTop: 4 }}>
+          <Label>Your custom cards</Label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {cards.filter(c => c.custom).map(c => (
+              <div key={c.id} style={{ background: T.card, border: `1px solid ${c.color}33`, borderRadius: 14, padding: "14px 16px", display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <div style={{ width: 3, borderRadius: 99, background: c.color, alignSelf: "stretch", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 11, color: c.color, fontWeight: 700, marginBottom: 4 }}>{c.cat}</div>
+                  <div style={{ fontSize: 13, color: T.white, lineHeight: 1.5 }}>{c.front}</div>
+                  {c.back && <div style={{ fontSize: 12, color: T.muted, marginTop: 5 }}>{c.back}</div>}
+                </div>
+                <button onClick={() => setCards(p => p.filter(x => x.id !== c.id))} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 16 }}>×</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {adding && (
+        <div style={{ position: "fixed", inset: 0, background: "#000000dd", display: "flex", alignItems: "flex-end", zIndex: 200 }}>
+          <div style={{ background: T.surface, borderRadius: "22px 22px 0 0", padding: "26px 22px 36px", width: "100%", maxHeight: "80vh", overflowY: "auto", boxSizing: "border-box" }}>
+            <div style={{ fontWeight: 900, fontSize: 17, color: T.white, marginBottom: 16 }}>New Flashcard</div>
+            {[
+              { key: "front", label: "Front *", placeholder: "Affirmation, vocab word, concept..." },
+              { key: "back", label: "Back / notes (optional)", placeholder: "Definition, scripture, reminder..." },
+              { key: "cat", label: "Category", placeholder: "e.g. A&P 2, Affirmations, Trading..." },
+            ].map(f => (
+              <div key={f.key} style={{ marginBottom: 13 }}>
+                <Label>{f.label}</Label>
+                <TextInput value={form[f.key]} onChange={v => setForm(p => ({ ...p, [f.key]: v }))} placeholder={f.placeholder} />
+              </div>
+            ))}
+            <Label>Card color</Label>
+            <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
+              {colors.map(c => (
+                <button key={c} onClick={() => setForm(p => ({ ...p, color: c }))} style={{
+                  width: 30, height: 30, borderRadius: "50%", background: c, border: "none",
+                  cursor: "pointer", outline: form.color === c ? `3px solid ${T.white}` : "none",
+                  outlineOffset: 2
+                }} />
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setAdding(false)} style={{ flex: 1, background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, color: T.muted, fontWeight: 700, fontSize: 14, padding: "13px", cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>
+              <GoldBtn onClick={save} style={{ flex: 2, opacity: form.front.trim() ? 1 : 0.4, pointerEvents: form.front.trim() ? "auto" : "none" }}>Save Card</GoldBtn>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── ROOT ─────────────────────────────────────────────────────────────────────
+const JOURNAL_PROMPTS = [
+  { day: 1,  prompt: "What does elevation mean to you right now, in this season of your life?" },
+  { day: 2,  prompt: "What is one habit you need to release to become her?" },
+  { day: 3,  prompt: "Write about a version of yourself you're proud of. What did she do?" },
+  { day: 4,  prompt: "What are three things you keep saying 'one day' about? Why not now?" },
+  { day: 5,  prompt: "Where are you still seeking validation you don't need?" },
+  { day: 6,  prompt: "What does discipline look like for you personally — not anyone else?" },
+  { day: 7,  prompt: "Who are you becoming? Describe her in detail." },
+  { day: 8,  prompt: "What fear has been quietly running your decisions? Name it." },
+  { day: 9,  prompt: "Write a letter to your past self from where you stand today." },
+  { day: 10, prompt: "What would you do if you knew you could not fail?" },
+  { day: 11, prompt: "What boundaries do you need to set — and why have you been avoiding them?" },
+  { day: 12, prompt: "How do you speak to yourself when no one is watching? Is it kind?" },
+  { day: 13, prompt: "What does your ideal morning routine look like? Be specific." },
+  { day: 14, prompt: "Halfway check-in: What has shifted in you over the last two weeks?" },
+  { day: 15, prompt: "Who in your life pours into you? Who drains you? What will you do with that?" },
+  { day: 16, prompt: "What does financial freedom feel like to you? Paint the picture." },
+  { day: 17, prompt: "What is one thing you've been tolerating that you need to stop tolerating?" },
+  { day: 18, prompt: "Write about a moment you showed up for yourself even when it was hard." },
+  { day: 19, prompt: "What would you tell your daughter about becoming a woman?" },
+  { day: 20, prompt: "What does rest mean to you — and do you allow yourself to have it?" },
+  { day: 21, prompt: "What are you most grateful for in this exact season, even the hard parts?" },
+  { day: 22, prompt: "What does your prayer life look like? What do you need to bring to God?" },
+  { day: 23, prompt: "Name three ways you have already elevated this month." },
+  { day: 24, prompt: "What does it mean to choose yourself? Have you been doing it?" },
+  { day: 25, prompt: "Write about a goal you gave up on. Is it still worth pursuing?" },
+  { day: 26, prompt: "What would your life look like in 3 years if you stayed consistent?" },
+  { day: 27, prompt: "What does your business, your brand, your legacy mean to you?" },
+  { day: 28, prompt: "How have your relationships reflected where you are in your growth?" },
+  { day: 29, prompt: "What is the most important lesson this 30-day journey has taught you?" },
+  { day: 30, prompt: "She made it. Write a letter to the woman you have become." },
+];
+
+// ─── JOURNAL SCREEN ───────────────────────────────────────────────────────────
+function JournalScreen() {
+  const today = new Date();
+  const dayOfMonth = today.getDate();
+  const currentPromptDay = ((dayOfMonth - 1) % 30) + 1;
+  const todayPrompt = JOURNAL_PROMPTS.find(p => p.day === currentPromptDay);
+  const [entries, setEntries] = usePersist("journal_entries", {});
+  const [activeDay, setActiveDay] = useState(currentPromptDay);
+  const [draft, setDraft] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [view, setView] = useState("today"); // "today" | "all"
+
+  const activePrompt = JOURNAL_PROMPTS.find(p => p.day === activeDay);
+  const existingEntry = entries[activeDay];
+
+  const saveEntry = () => {
+    if (!draft.trim()) return;
+    setEntries(prev => ({ ...prev, [activeDay]: { text: draft, savedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) } }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const entriesCount = Object.keys(entries).length;
+
+  return (
+    <div style={{ paddingBottom: 20 }}>
+      {/* Header stats */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+        <div style={{ flex: 1, background: T.goldGlow, border: `1px solid ${T.gold}44`, borderRadius: 14, padding: "14px", textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: T.gold }}>{entriesCount}</div>
+          <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: 1 }}>Entries</div>
+        </div>
+        <div style={{ flex: 1, background: T.pinkSoft, border: `1px solid ${T.pink}44`, borderRadius: 14, padding: "14px", textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: T.pink }}>{30 - entriesCount}</div>
+          <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: 1 }}>Remaining</div>
+        </div>
+        <div style={{ flex: 1, background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "14px", textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: T.white }}>Day {currentPromptDay}</div>
+          <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: 1 }}>Today</div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+        {[{ id: "today", label: "✍️ Write" }, { id: "all", label: "📖 All Prompts" }].map(t => (
+          <button key={t.id} onClick={() => setView(t.id)} style={{
+            flex: 1, background: view === t.id ? T.goldSoft : T.surface,
+            border: `1px solid ${view === t.id ? T.gold : T.border}`,
+            borderRadius: 10, color: view === t.id ? T.gold : T.muted,
+            fontSize: 13, fontWeight: 700, padding: "9px",
+            cursor: "pointer", fontFamily: "inherit"
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {view === "today" && (
+        <div>
+          {/* Today's prompt */}
+          <div style={{ background: T.goldGlow, border: `1px solid ${T.gold}44`, borderLeft: `3px solid ${T.gold}`, borderRadius: 16, padding: "18px", marginBottom: 18 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Day {currentPromptDay} Prompt</div>
+            <p style={{ fontSize: 15, fontWeight: 600, color: T.white, lineHeight: 1.6, margin: 0 }}>{todayPrompt?.prompt}</p>
+          </div>
+
+          {/* Entry area */}
+          {existingEntry ? (
+            <div>
+              <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "16px", marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, color: T.gold, fontWeight: 700 }}>Your entry</div>
+                  <div style={{ fontSize: 10, color: T.muted }}>{existingEntry.savedAt}</div>
+                </div>
+                <p style={{ fontSize: 14, color: T.white, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>{existingEntry.text}</p>
+              </div>
+              <button onClick={() => { setDraft(existingEntry.text); setEntries(p => { const n = { ...p }; delete n[activeDay]; return n; }); }} style={{
+                width: "100%", background: "transparent", border: `1px solid ${T.border}`, borderRadius: 12,
+                color: T.muted, fontWeight: 700, fontSize: 13, padding: "11px", cursor: "pointer", fontFamily: "inherit"
+              }}>Edit entry</button>
+            </div>
+          ) : (
+            <div>
+              <Label>Your response</Label>
+              <textarea
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                placeholder="Write freely. No one is watching. This is yours..."
+                rows={8}
+                style={{ width: "100%", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px", color: T.white, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit", resize: "none", lineHeight: 1.7 }}
+              />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                <span style={{ fontSize: 11, color: T.muted }}>{draft.length} characters</span>
+                {saved && <span style={{ fontSize: 12, color: T.gold, fontWeight: 700 }}>✓ Saved!</span>}
+              </div>
+              <GoldBtn onClick={saveEntry} style={{ width: "100%", marginTop: 10, opacity: draft.trim() ? 1 : 0.4, pointerEvents: draft.trim() ? "auto" : "none" }}>Save Entry</GoldBtn>
+            </div>
+          )}
+        </div>
+      )}
+
+      {view === "all" && (
+        <div>
+          <div style={{ fontSize: 12, color: T.muted, marginBottom: 14 }}>Tap any day to read its prompt and write your entry.</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {JOURNAL_PROMPTS.map(p => {
+              const hasEntry = !!entries[p.day];
+              const isToday = p.day === currentPromptDay;
+              return (
+                <div key={p.day} onClick={() => { setActiveDay(p.day); setDraft(entries[p.day]?.text || ""); setView("write-day"); }} style={{
+                  background: T.card, border: `1px solid ${isToday ? T.gold + "66" : hasEntry ? T.pink + "44" : T.border}`,
+                  borderRadius: 14, padding: "14px 16px", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 12
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                    background: isToday ? T.goldGlow : hasEntry ? T.pinkSoft : T.surface,
+                    border: `1px solid ${isToday ? T.gold : hasEntry ? T.pink : T.border}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 12, fontWeight: 900, color: isToday ? T.gold : hasEntry ? T.pink : T.muted
+                  }}>{p.day}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, color: isToday ? T.white : T.muted, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.prompt}</div>
+                  </div>
+                  <div style={{ fontSize: 14, flexShrink: 0 }}>{hasEntry ? "✅" : isToday ? "✍️" : "○"}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {view === "write-day" && (
+        <div>
+          <button onClick={() => setView("all")} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 13, padding: "0 0 14px", fontFamily: "inherit" }}>← Back to prompts</button>
+          <div style={{ background: T.goldGlow, border: `1px solid ${T.gold}44`, borderLeft: `3px solid ${T.gold}`, borderRadius: 16, padding: "18px", marginBottom: 18 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>Day {activeDay} Prompt</div>
+            <p style={{ fontSize: 15, fontWeight: 600, color: T.white, lineHeight: 1.6, margin: 0 }}>{activePrompt?.prompt}</p>
+          </div>
+          {entries[activeDay] ? (
+            <div>
+              <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: "16px", marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: T.gold, fontWeight: 700, marginBottom: 8 }}>Your entry</div>
+                <p style={{ fontSize: 14, color: T.white, lineHeight: 1.7, margin: 0, whiteSpace: "pre-wrap" }}>{entries[activeDay].text}</p>
+              </div>
+              <button onClick={() => { setDraft(entries[activeDay].text); setEntries(p => { const n = { ...p }; delete n[activeDay]; return n; }); }} style={{
+                width: "100%", background: "transparent", border: `1px solid ${T.border}`, borderRadius: 12,
+                color: T.muted, fontWeight: 700, fontSize: 13, padding: "11px", cursor: "pointer", fontFamily: "inherit"
+              }}>Edit entry</button>
+            </div>
+          ) : (
+            <div>
+              <textarea value={draft} onChange={e => setDraft(e.target.value)} placeholder="Write freely..." rows={8}
+                style={{ width: "100%", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "14px", color: T.white, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit", resize: "none", lineHeight: 1.7 }} />
+              <GoldBtn onClick={() => {
+                if (!draft.trim()) return;
+                setEntries(prev => ({ ...prev, [activeDay]: { text: draft, savedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) } }));
+                setDraft("");
+                setView("all");
+              }} style={{ width: "100%", marginTop: 10, opacity: draft.trim() ? 1 : 0.4, pointerEvents: draft.trim() ? "auto" : "none" }}>Save Entry</GoldBtn>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── WINS TRACKER SCREEN ──────────────────────────────────────────────────────
+function WinsScreen() {
+  const [wins, setWins] = usePersist("wins_list", []);
+  const [input, setInput] = useState("");
+  const [category, setCategory] = useState("General");
+  const [filter, setFilter] = useState("All");
+
+  const WIN_CATS = ["General", "Mindset", "Fitness", "Finances", "Business", "Spiritual", "School"];
+  const WIN_CAT_COLORS = { General: T.gold, Mindset: T.mindset, Fitness: T.fitness, Finances: T.finance, Business: T.gold, Spiritual: T.spiritual, School: "#60a5fa" };
+
+  const addWin = () => {
+    if (!input.trim()) return;
+    setWins(prev => [{
+      id: Date.now(),
+      text: input.trim(),
+      category,
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      celebrated: false,
+    }, ...prev]);
+    setInput("");
+  };
+
+  const toggleCelebrate = (id) => setWins(p => p.map(w => w.id === id ? { ...w, celebrated: !w.celebrated } : w));
+  const deleteWin = (id) => setWins(p => p.filter(w => w.id !== id));
+
+  const filtered = filter === "All" ? wins : wins.filter(w => w.category === filter);
+  const totalWins = wins.length;
+  const thisWeekWins = wins.filter(w => {
+    const d = new Date(w.date + " " + new Date().getFullYear());
+    const now = new Date();
+    const diff = (now - d) / (1000 * 60 * 60 * 24);
+    return diff <= 7;
+  }).length;
+
+  return (
+    <div style={{ paddingBottom: 20 }}>
+      {/* Stats */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+        <div style={{ flex: 1, background: T.goldGlow, border: `1px solid ${T.gold}44`, borderRadius: 14, padding: "14px", textAlign: "center" }}>
+          <div style={{ fontSize: 26, fontWeight: 900, color: T.gold }}>🏆</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: T.gold }}>{totalWins}</div>
+          <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: 1 }}>Total Wins</div>
+        </div>
+        <div style={{ flex: 1, background: T.pinkSoft, border: `1px solid ${T.pink}44`, borderRadius: 14, padding: "14px", textAlign: "center" }}>
+          <div style={{ fontSize: 26, fontWeight: 900, color: T.pink }}>🔥</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: T.pink }}>{thisWeekWins}</div>
+          <div style={{ fontSize: 10, color: T.muted, textTransform: "uppercase", letterSpacing: 1 }}>This Week</div>
+        </div>
+      </div>
+
+      {/* Log a win */}
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 18, padding: "18px", marginBottom: 18 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: T.gold, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 12 }}>◆ Log a Win</div>
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="What did you win today? Big or small — it all counts."
+          rows={3}
+          style={{ width: "100%", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: "12px 14px", color: T.white, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: "inherit", resize: "none", lineHeight: 1.6, marginBottom: 10 }}
+        />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+          {WIN_CATS.map(c => (
+            <button key={c} onClick={() => setCategory(c)} style={{
+              background: category === c ? WIN_CAT_COLORS[c] + "22" : T.surface,
+              border: `1px solid ${category === c ? WIN_CAT_COLORS[c] : T.border}`,
+              borderRadius: 20, color: category === c ? WIN_CAT_COLORS[c] : T.muted,
+              fontSize: 11, fontWeight: 600, padding: "5px 12px",
+              cursor: "pointer", fontFamily: "inherit"
+            }}>{c}</button>
+          ))}
+        </div>
+        <PinkBtn onClick={addWin} small style={{ width: "100%", opacity: input.trim() ? 1 : 0.4, pointerEvents: input.trim() ? "auto" : "none" }}>
+          + Log This Win 🏆
+        </PinkBtn>
+      </div>
+
+      {/* Filter */}
+      {wins.length > 0 && (
+        <div>
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 14, scrollbarWidth: "none" }}>
+            {["All", ...WIN_CATS].map(c => (
+              <button key={c} onClick={() => setFilter(c)} style={{
+                background: filter === c ? T.goldSoft : T.surface,
+                border: `1px solid ${filter === c ? T.gold : T.border}`,
+                borderRadius: 20, color: filter === c ? T.gold : T.muted,
+                fontSize: 11, fontWeight: 700, padding: "6px 12px",
+                cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", flexShrink: 0
+              }}>{c}</button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {filtered.map(w => (
+              <div key={w.id} style={{
+                background: T.card, borderRadius: 16, padding: "14px 16px",
+                border: `1px solid ${w.celebrated ? T.gold + "55" : T.border}`,
+                borderLeft: `3px solid ${WIN_CAT_COLORS[w.category] || T.gold}`
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: WIN_CAT_COLORS[w.category] || T.gold, textTransform: "uppercase", letterSpacing: 1 }}>{w.category}</span>
+                      <span style={{ fontSize: 10, color: T.muted }}>{w.date} · {w.time}</span>
+                    </div>
+                    <p style={{ fontSize: 13, color: T.white, lineHeight: 1.6, margin: 0 }}>{w.text}</p>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
+                    <button onClick={() => toggleCelebrate(w.id)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", opacity: w.celebrated ? 1 : 0.3 }}>🏆</button>
+                    <button onClick={() => deleteWin(w.id)} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 14 }}>×</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {wins.length === 0 && (
+        <div style={{ background: T.card, border: `1px dashed ${T.border}`, borderRadius: 18, padding: "40px 20px", textAlign: "center" }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🏆</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 6 }}>Your wins go here.</div>
+          <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.6 }}>Start logging. Big or small — every win counts toward your elevation.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const NAV = [
+  { id: "home", icon: "🏠", label: "Home" },
+  { id: "goals", icon: "🎯", label: "Goals" },
+  { id: "journal", icon: "✍️", label: "Journal" },
+  { id: "wins", icon: "🏆", label: "Wins" },
+  { id: "flashcards", icon: "🃏", label: "Cards" },
+];
+
+function App() {
+  const [ready, setReady] = usePersist("app_ready", false);
+  const [userName, setUserName] = usePersist("app_userName", "Queen");
+  const [navTab, setNavTab] = useState("home");
+  const [activeCat, setActiveCat] = useState(null);
+  const [goals, setGoals] = usePersist("app_goals", []);
+
+  if (!ready) return <Onboarding onDone={n => { setUserName(n); setReady(true); }} />;
+
+  const handleNav = (id) => {
+    const isCat = CATEGORIES.find(c => c.id === id);
+    if (isCat) { setActiveCat(id); setNavTab("goals"); }
+    else if (id === "flashcards") { setActiveCat(null); setNavTab("flashcards"); }
+    else { setNavTab(id); setActiveCat(null); }
+  };
+
+  const cat = activeCat ? CATEGORIES.find(c => c.id === activeCat) : null;
+
+  return (
+    <div style={{ background: T.bg, minHeight: "100vh", maxWidth: 480, margin: "0 auto", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+      {/* Top gold border line */}
+      <div style={{ height: 3, background: `linear-gradient(90deg, ${T.gold}, ${T.pink}, ${T.gold})` }} />
+
+      <div style={{ overflowY: "auto", height: "calc(100vh - 73px)" }}>
+        <div style={{ padding: "0 20px" }}>
+          {/* Category breadcrumb header */}
+          {navTab !== "home" && (
+            <div style={{ paddingTop: 24, paddingBottom: 16 }}>
+              {activeCat && (
+                <button onClick={() => setActiveCat(null)} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 13, padding: "0 0 10px", fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}>
+                  ← All categories
+                </button>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 28 }}>{cat ? cat.emoji : navTab === "flashcards" ? "🃏" : navTab === "journal" ? "✍️" : navTab === "wins" ? "🏆" : "🎯"}</span>
+                <div>
+                  <h2 style={{ fontSize: 22, fontWeight: 900, color: T.white, margin: 0 }}>
+                    {cat ? cat.label : navTab === "flashcards" ? "Flashcards" : navTab === "journal" ? "Journal" : navTab === "wins" ? "My Wins" : "Goals"}
+                  </h2>
+                  {cat && <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{cat.desc}</div>}
+                  {navTab === "journal" && !cat && <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>30-day elevation prompts</div>}
+                  {navTab === "wins" && !cat && <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>Every win counts</div>}
+                </div>
+              </div>
+              <div style={{ height: 1, background: `linear-gradient(90deg, ${T.gold}55, transparent)`, marginTop: 14 }} />
+            </div>
+          )}
+
+          {navTab === "home" && <HomeScreen userName={userName} onNav={handleNav} />}
+
+          {navTab === "goals" && !activeCat && (
+            <div style={{ paddingTop: 28 }}>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: T.gold, letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 6 }}>— EVOLVING WOMEN —</div>
+                <h2 style={{ fontSize: 22, fontWeight: 900, color: T.white, margin: "0 0 4px" }}>My Goals</h2>
+                <p style={{ color: T.muted, fontSize: 13, margin: 0 }}>Select a category to manage your goals</p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {CATEGORIES.map(c => {
+                  const myCount = goals.filter(g => g.catId === c.id).length;
+                  return (
+                    <div key={c.id} onClick={() => setActiveCat(c.id)} style={{
+                      background: T.card, border: `1px solid ${c.color}44`,
+                      borderRadius: 18, padding: "16px 18px", cursor: "pointer",
+                      display: "flex", alignItems: "center", gap: 14,
+                    }}>
+                      <div style={{ width: 46, height: 46, borderRadius: 12, background: c.color + "22", border: `1px solid ${c.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{c.emoji}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 800, fontSize: 15, color: T.white }}>{c.label}</div>
+                        <div style={{ fontSize: 12, color: T.muted, marginTop: 2 }}>{c.desc}</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        {myCount > 0 && <div style={{ fontSize: 12, color: c.color, fontWeight: 700, marginBottom: 2 }}>{myCount} goal{myCount !== 1 ? "s" : ""}</div>}
+                        <div style={{ color: T.muted, fontSize: 18 }}>›</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {navTab === "goals" && activeCat && (
+            <CategoryScreen catId={activeCat} goals={goals} setGoals={setGoals} />
+          )}
+
+          {navTab === "flashcards" && <FlashcardsScreen />}
+          {navTab === "journal" && <JournalScreen />}
+          {navTab === "wins" && <WinsScreen />}
+        </div>
+        <div style={{ height: 36 }} />
+      </div>
+
+      {/* Bottom nav */}
+      <div style={{
+        position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
+        width: "100%", maxWidth: 480,
+        background: T.surface, borderTop: `1px solid ${T.border}`,
+        display: "flex", justifyContent: "space-around",
+        padding: "10px 0 16px", zIndex: 100
+      }}>
+        {NAV.map(n => {
+          const active = navTab === n.id;
+          return (
+            <button key={n.id} onClick={() => { setNavTab(n.id); if (n.id !== "goals") setActiveCat(null); }} style={{
+              background: "none", border: "none", cursor: "pointer",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+              padding: "4px 24px", position: "relative"
+            }}>
+              {active && <div style={{ position: "absolute", top: -10, width: 28, height: 3, background: `linear-gradient(90deg, ${T.gold}, ${T.pink})`, borderRadius: 99 }} />}
+              <span style={{ fontSize: 22, opacity: active ? 1 : 0.35 }}>{n.icon}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: active ? T.gold : T.muted }}>{n.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+  </script>
+  <script>
+    // Fallback: if app doesn't render within 10s, show error message
+    setTimeout(() => {
+      const root = document.getElementById('root');
+      if (root && (root.innerHTML.includes('Loading') || root.innerHTML === '')) {
+        root.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#111114;flex-direction:column;gap:16px;padding:24px;text-align:center"><div style="font-size:40px;margin-bottom:8px">👑</div><div style="color:#F5C518;font-family:system-ui;font-size:18px;font-weight:800;margin-bottom:8px">MY Elevation</div><div style="color:#888899;font-family:system-ui;font-size:13px;line-height:1.6">Having trouble loading?<br>Try opening in Chrome or Safari.</div></div>';
+      }
+    }, 10000);
+  </script>
+</body>
+</html>
